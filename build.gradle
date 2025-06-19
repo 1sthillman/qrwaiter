@@ -1,0 +1,90 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.2'
+        classpath 'com.google.gms:google-services:4.4.0'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+// variables.gradle yerine doğrudan tanımlamalar
+ext {
+    minSdkVersion = 22
+    compileSdkVersion = 34
+    targetSdkVersion = 34
+    androidxActivityVersion = '1.7.0'
+    androidxAppCompatVersion = '1.6.1'
+    androidxCoordinatorLayoutVersion = '1.2.0'
+    androidxCoreVersion = '1.10.0'
+    androidxFragmentVersion = '1.5.6'
+    coreSplashScreenVersion = '1.0.0'
+    androidxWebkitVersion = '1.6.1'
+    junitVersion = '4.13.2'
+    androidxJunitVersion = '1.1.5'
+    androidxEspressoCoreVersion = '3.5.1'
+    cordovaAndroidVersion = '10.1.1'
+    playServicesVersion = '21.0.0'
+}
+
+// AndroidX özelliklerini açıkça etkinleştirelim
+allprojects {
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+            
+            // JDK Image dönüşüm sorununu çözmek için
+            options.compilerArgumentProviders.removeIf { provider ->
+                provider.class.name.contains('JdkImageInput')
+            }
+        }
+    }
+    
+    // Her proje için AndroidX kullanımını etkinleştir
+    beforeEvaluate { project ->
+        project.ext.set("android.useAndroidX", true)
+        project.ext.set("android.enableJetifier", true)
+    }
+    
+    repositories {
+        google()
+        mavenCentral()
+    }
+    
+    // JDK Image sorunlarını önlemek için tüm projeler için ortak ayarlar
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                lintOptions {
+                    abortOnError false
+                    checkReleaseBuilds false
+                }
+                
+                if (project.android.hasProperty('packagingOptions')) {
+                    packagingOptions {
+                        exclude 'META-INF/DEPENDENCIES'
+                        exclude 'META-INF/LICENSE'
+                        exclude 'META-INF/LICENSE.txt'
+                        exclude 'META-INF/license.txt'
+                        exclude 'META-INF/NOTICE'
+                        exclude 'META-INF/NOTICE.txt'
+                        exclude 'META-INF/notice.txt'
+                        exclude 'META-INF/ASL2.0'
+                        resources.excludes.add("META-INF/*")
+                    }
+                }
+            }
+        }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+} 

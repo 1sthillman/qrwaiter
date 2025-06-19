@@ -1,0 +1,69 @@
+ext {
+    androidxAppCompatVersion = project.hasProperty('androidxAppCompatVersion') ? rootProject.ext.androidxAppCompatVersion : '1.6.1'
+    cordovaAndroidVersion = project.hasProperty('cordovaAndroidVersion') ? rootProject.ext.cordovaAndroidVersion : '10.1.1'
+}
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.2'
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    // AndroidX kullanımını açıkça belirt
+    System.setProperty("android.useAndroidX", "true")
+    System.setProperty("android.enableJetifier", "true")
+    
+    namespace "capacitor.cordova.android.plugins"
+    compileSdk project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 34
+    defaultConfig {
+        minSdkVersion project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 23
+        targetSdkVersion project.hasProperty('targetSdkVersion') ? rootProject.ext.targetSdkVersion : 34
+        versionCode 1
+        versionName "1.0"
+    }
+    lintOptions {
+        abortOnError false
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+repositories {
+    google()
+    mavenCentral()
+    // flatDir yerine mavenCentral kullanımını teşvik ediyoruz
+    flatDir{
+        dirs 'src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'src/main/libs', include: ['*.jar'])
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "org.apache.cordova:framework:$cordovaAndroidVersion"
+    // SUB-PROJECT DEPENDENCIES START
+
+    // SUB-PROJECT DEPENDENCIES END
+}
+
+// PLUGIN GRADLE EXTENSIONS START
+apply from: "cordova.variables.gradle"
+// PLUGIN GRADLE EXTENSIONS END
+
+// Tanımlanmamış cdvPluginPostBuildExtras fonksiyonuyla ilgili hata almamak için boş bir liste tanımlıyoruz
+ext.cdvPluginPostBuildExtras = []
+// Sadece eğer boş olmayan bir liste varsa çalıştırıyoruz
+if (cdvPluginPostBuildExtras) {
+    for (def func : cdvPluginPostBuildExtras) {
+        func()
+    }
+} 

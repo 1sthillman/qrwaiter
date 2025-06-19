@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">RestoranApp</string>
+    <string name="title_activity_main">RestoranApp</string>
+    <string name="package_name">com.restoran.app</string>
+    <string name="custom_url_scheme">com.restoran.app</string>
+</resources>
