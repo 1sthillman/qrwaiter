@@ -159,6 +159,31 @@ async function createCall(isUrgent) {
         appState.callId = data.id;
         showCallStatus(data);
         
+        // Bildirim kanalına yayın yap
+        try {
+            await supabase.channel('restaurant-app').send({
+                type: 'broadcast',
+                event: 'restaurant-updates',
+                payload: {
+                    type: 'waiter-call',
+                    tableNumber: appState.tableNumber,
+                    message: `Masa ${appState.tableNumber} garson çağırıyor`,
+                    sender: `customer_table_${appState.tableNumber}`
+                }
+            });
+            console.log('Garson çağrısı bildirimi gönderildi');
+        } catch (err) {
+            console.error('Bildirim gönderilemedi:', err);
+        }
+        
+        // Çağrı sesini çal
+        const callSound = document.getElementById('callSound');
+        if (callSound) {
+            callSound.play().catch(err => {
+                console.log('Ses otomatik çalınamadı:', err);
+            });
+        }
+        
         elements.loadingOverlay.style.display = 'none';
     } catch (error) {
         console.error('Çağrı oluşturulurken hata:', error);
@@ -185,6 +210,14 @@ function showCallStatus(call) {
         
         // Gerçek zamanlı durum takibi
         setupRealtimeSubscription();
+        
+        // Çağrı sesini çal
+        const callSound = document.getElementById('callSound');
+        if (callSound) {
+            callSound.play().catch(err => {
+                console.log('Ses otomatik çalınamadı:', err);
+            });
+        }
     } else if (call.status === 'responded') {
         elements.statusWaiting.classList.add('d-none');
         elements.statusResponded.classList.remove('d-none');
@@ -192,12 +225,19 @@ function showCallStatus(call) {
         if (call.note) {
             elements.responseNote.textContent = call.note;
         } else {
-            elements.responseNote.textContent = '';
+            elements.responseNote.textContent = 'Garson geliyor';
         }
         
         if (appState.waitingInterval) {
             clearInterval(appState.waitingInterval);
             appState.waitingInterval = null;
+        }
+        
+        // Çağrı sesini durdur
+        const callSound = document.getElementById('callSound');
+        if (callSound) {
+            callSound.pause();
+            callSound.currentTime = 0;
         }
     }
 }
@@ -253,10 +293,17 @@ function handleCallStatusChange(payload) {
         elements.statusWaiting.classList.add('d-none');
         elements.statusResponded.classList.remove('d-none');
         
+        // Ses çalma işlemini durdur
+        const audioElements = document.querySelectorAll('audio');
+        audioElements.forEach(audio => {
+            audio.pause();
+            audio.currentTime = 0;
+        });
+        
         if (updatedCall.note) {
             elements.responseNote.textContent = updatedCall.note;
         } else {
-            elements.responseNote.textContent = '';
+            elements.responseNote.textContent = 'Garson geliyor';
         }
         
         if (appState.waitingInterval) {
